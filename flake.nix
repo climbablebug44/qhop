@@ -10,6 +10,8 @@
     in
     {
       packages.${system}.default =
-        pkgs.writers.writePython3Bin "hop" { } (builtins.readFile ./quick-ssh.py);
+        pkgs.writeShellScriptBin "hop" ''
+          exec ${pkgs.python3}/bin/python3 ${./quick-ssh.py} "$@"
+        '';
     };
 }
