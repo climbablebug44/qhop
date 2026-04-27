@@ -62,7 +62,7 @@ def save_data(data):
 
 def fzf_select(items):
     result = subprocess.run(
-        ["fzf", "--prompt=hop> ", "--height=40%", "--reverse",
+        ["fzf", "--prompt=qhop> ", "--height=40%", "--reverse",
          "--no-sort"],
         input="\n".join(items),
         text=True,
@@ -209,7 +209,7 @@ def cmd_sync(args):
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="hop", description="Fuzzy SSH host selector"
+        prog="qhop", description="Fuzzy SSH host selector"
     )
     parser.add_argument(
         "-m", "--mosh", action="store_true",

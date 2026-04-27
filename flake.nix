@@ -10,7 +10,7 @@
     in
     {
       packages.${system}.default =
-        pkgs.writeShellScriptBin "hop" ''
+        pkgs.writeShellScriptBin "qhop" ''
           exec ${pkgs.python3}/bin/python3 ${./quick-ssh.py} "$@"
         '';
     };
