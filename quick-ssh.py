@@ -143,10 +143,13 @@ def cmd_connect(args):
 def cmd_add(args):
     data = load_data()
     host = args.host
-    user = args.user or get_ssh_user(host)
+    user = args.user or get_ssh_user(host) or data.get("default_user")
 
     if not user:
-        sys.exit(f"Cannot detect user for {host}. Use -u to specify.")
+        sys.exit(
+            f"Cannot detect user for {host}. "
+            "Use -u or set a default with 'qhop config default-user'."
+        )
 
     user_hosts = data.setdefault("hosts", {}).setdefault(user, [])
 
@@ -194,7 +197,7 @@ def cmd_sync(args):
         if "," in host or host.startswith("["):
             continue
 
-        user = get_ssh_user(host)
+        user = get_ssh_user(host) or data.get("default_user")
         if not user:
             continue
 
@@ -205,6 +208,22 @@ def cmd_sync(args):
 
     save_data(data)
     print(f"Synced: +{added} new hosts")
+
+
+def cmd_config(args):
+    data = load_data()
+    if args.key == "default-user" and args.value:
+        data["default_user"] = args.value
+        save_data(data)
+        print(f"default_user = {args.value}")
+    else:
+        print(
+            f"default_user  = {data.get('default_user', '(not set)')}"
+        )
+        print(
+            f"history_limit = "
+            f"{data.get('history_limit', HISTORY_LIMIT)}"
+        )
 
 
 def main():
@@ -237,8 +256,15 @@ def main():
 
     sub.add_parser("sync", help="populate from ~/.ssh/known_hosts")
 
+    p_cfg = sub.add_parser("config", help="view/set config")
+    p_cfg.add_argument("key", nargs="?")
+    p_cfg.add_argument("value", nargs="?")
+
     args = parser.parse_args()
-    dispatch = {"add": cmd_add, "rm": cmd_rm, "sync": cmd_sync}
+    dispatch = {
+        "add": cmd_add, "rm": cmd_rm,
+        "sync": cmd_sync, "config": cmd_config,
+    }
     dispatch.get(args.cmd, cmd_connect)(args)
 
 
