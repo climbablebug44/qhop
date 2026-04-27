@@ -12,7 +12,10 @@ HISTORY_LIMIT = 10
 
 
 def natural_key(s):
-    return [int(c) if c.isdigit() else c.lower() for c in re.split(r"(\d+)", s)]
+    return [
+        int(c) if c.isdigit() else c.lower()
+        for c in re.split(r"(\d+)", s)
+    ]
 
 
 def migrate(old):
@@ -20,7 +23,9 @@ def migrate(old):
     return {
         "hosts": {k: v for k, v in old.items() if k not in ignore},
         "history": old.get("quick_hist", []),
-        "history_limit": old.get("metadata", {}).get("history_limit", HISTORY_LIMIT),
+        "history_limit": (
+            old.get("metadata", {}).get("history_limit", HISTORY_LIMIT)
+        ),
     }
 
 
@@ -49,13 +54,16 @@ def load_data():
 def save_data(data):
     DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
     for user in data.get("hosts", {}):
-        data["hosts"][user] = sorted(data["hosts"][user], key=natural_key)
+        data["hosts"][user] = sorted(
+            data["hosts"][user], key=natural_key
+        )
     DATA_FILE.write_text(json.dumps(data, indent=4))
 
 
 def fzf_select(items):
     result = subprocess.run(
-        ["fzf", "--prompt=hop> ", "--height=40%", "--reverse", "--no-sort"],
+        ["fzf", "--prompt=hop> ", "--height=40%", "--reverse",
+         "--no-sort"],
         input="\n".join(items),
         text=True,
         stdout=subprocess.PIPE,
@@ -66,7 +74,9 @@ def fzf_select(items):
 
 
 def get_ssh_user(host):
-    result = subprocess.run(["ssh", "-G", host], capture_output=True, text=True)
+    result = subprocess.run(
+        ["ssh", "-G", host], capture_output=True, text=True
+    )
     for line in result.stdout.splitlines():
         if line.startswith("user "):
             return line.split(" ", 1)[1].strip()
@@ -113,7 +123,7 @@ def cmd_connect(args):
                 entries.append(entry)
 
     if not entries:
-        sys.exit("No hosts configured. Use 'hop add <host>' to add servers.")
+        sys.exit("No hosts configured. Use 'hop add <host>'.")
 
     selected = fzf_select(entries)
     if selected.startswith("[h] "):
@@ -122,7 +132,12 @@ def cmd_connect(args):
     user, host = selected.split("@", 1)
     update_history(data, f"{user}@{host}")
     save_data(data)
-    connect(user, host, use_mosh=args.mosh, forward=args.forward, as_root=args.root)
+    connect(
+        user, host,
+        use_mosh=args.mosh,
+        forward=args.forward,
+        as_root=args.root,
+    )
 
 
 def cmd_add(args):
@@ -193,16 +208,29 @@ def cmd_sync(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(prog="hop", description="Fuzzy SSH host selector")
-    parser.add_argument("-m", "--mosh", action="store_true", help="use mosh (default: ssh)")
-    parser.add_argument("-A", "--forward", action="store_true", help="SSH agent forwarding")
-    parser.add_argument("--root", action="store_true", help="connect as root")
+    parser = argparse.ArgumentParser(
+        prog="hop", description="Fuzzy SSH host selector"
+    )
+    parser.add_argument(
+        "-m", "--mosh", action="store_true",
+        help="use mosh (default: ssh)",
+    )
+    parser.add_argument(
+        "-A", "--forward", action="store_true",
+        help="SSH agent forwarding",
+    )
+    parser.add_argument(
+        "--root", action="store_true", help="connect as root"
+    )
 
     sub = parser.add_subparsers(dest="cmd")
 
     p_add = sub.add_parser("add", help="add a host")
     p_add.add_argument("host")
-    p_add.add_argument("-u", "--user", help="SSH user (auto-detected from ~/.ssh/config if omitted)")
+    p_add.add_argument(
+        "-u", "--user",
+        help="SSH user (auto-detected from ~/.ssh/config if omitted)",
+    )
 
     p_rm = sub.add_parser("rm", help="remove a host")
     p_rm.add_argument("host")
@@ -210,7 +238,8 @@ def main():
     sub.add_parser("sync", help="populate from ~/.ssh/known_hosts")
 
     args = parser.parse_args()
-    {"add": cmd_add, "rm": cmd_rm, "sync": cmd_sync}.get(args.cmd, cmd_connect)(args)
+    dispatch = {"add": cmd_add, "rm": cmd_rm, "sync": cmd_sync}
+    dispatch.get(args.cmd, cmd_connect)(args)
 
 
 if __name__ == "__main__":
