@@ -12,7 +12,7 @@
       packages.${system}.default =
         pkgs.writeShellApplication {
           name = "qhop";
-          runtimeInputs = [ pkgs.fzf ];
+          runtimeInputs = [ pkgs.fzf pkgs.openssh pkgs.mosh ];
           text = ''
             exec ${pkgs.python3}/bin/python3 ${./quick-ssh.py} "$@"
           '';
