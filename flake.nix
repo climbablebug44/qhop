@@ -10,8 +10,12 @@
     in
     {
       packages.${system}.default =
-        pkgs.writeShellScriptBin "qhop" ''
-          exec ${pkgs.python3}/bin/python3 ${./quick-ssh.py} "$@"
-        '';
+        pkgs.writeShellApplication {
+          name = "qhop";
+          runtimeInputs = [ pkgs.fzf ];
+          text = ''
+            exec ${pkgs.python3}/bin/python3 ${./quick-ssh.py} "$@"
+          '';
+        };
     };
 }
