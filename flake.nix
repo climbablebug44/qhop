@@ -1,5 +1,5 @@
 {
-  description = "hop - fuzzy SSH host selector";
+  description = "qhop - fuzzy SSH host selector";
 
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
@@ -7,15 +7,19 @@
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
+      qhop = pkgs.writeShellApplication {
+        name = "qhop";
+        runtimeInputs = [ pkgs.fzf pkgs.openssh pkgs.mosh ];
+        text = ''
+          exec ${pkgs.python3}/bin/python3 ${./quick-ssh.py} "$@"
+        '';
+      };
     in
     {
-      packages.${system}.default =
-        pkgs.writeShellApplication {
-          name = "qhop";
-          runtimeInputs = [ pkgs.fzf pkgs.openssh pkgs.mosh ];
-          text = ''
-            exec ${pkgs.python3}/bin/python3 ${./quick-ssh.py} "$@"
-          '';
-        };
+      packages.${system}.default = qhop;
+      apps.${system}.default = {
+        type = "app";
+        program = "${qhop}/bin/qhop";
+      };
     };
 }
