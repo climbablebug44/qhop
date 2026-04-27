@@ -16,6 +16,12 @@ qhop rm <host>            # remove host
 qhop sync                 # populate from ~/.ssh/known_hosts
 ```
 
+## Try it
+
+```bash
+nix run github:climbablebug44/qhop
+```
+
 ## Installation
 
 ### NixOS + home-manager
